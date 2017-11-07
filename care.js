@@ -5,6 +5,7 @@ var gitbot = require(__dirname + '/gitbot.js');
 var pomodoro = require(__dirname + '/pomodoro.js');
 var ansiArt = require('ansi-art').default;
 
+var path = require('path');
 var notifier = require('node-notifier');
 var spawn = require('child_process').spawn;
 var blessed = require('blessed');
@@ -243,6 +244,7 @@ function makeGraphBox(label) {
   options.barWidth= 5;
   options.xOffset= 4;
   options.maxHeight= 10;
+  options.barFgColor= 'black';
   return options;
 }
 
@@ -280,8 +282,14 @@ function colorizeLog(text) {
 }
 
 function formatRepoName(line, divider) {
-  var path = line.split(divider);
-  return '\n' + chalk.yellow(path[path.length - 1]);
+  var repoPath = config.repos
+    .sort((a, b) => a.length < b.length) // Longest repo repoPath first
+    .find(repo => line.startsWith(repo));
+  var repoRootPath = chalk.yellow(path.basename(repoPath) + divider);
+  var repoChildPath = chalk.yellow.bold(
+    line.replace(repoPath, '').replace(new RegExp(`^${divider}`), '')
+  );
+  return `\n${repoRootPath}${repoChildPath}`;
 }
 
 function llamaSay(text) {
